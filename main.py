@@ -25,6 +25,10 @@ def get_fun_fact(n: int) -> str:
 		return response.json().get("text", "No fun fact available.")
 	return "No fun fact available."
 
+@app.get("/")
+def read_root():
+	return {"message": "API is running. Use /api/classify-number?number=<value> to classify a number."}
+
 @app.get("/api/classify-number")
 def classify_number(number: str = Query(..., description="The number to classify")):
 	"""Classify a number based on mathematical properties."""
