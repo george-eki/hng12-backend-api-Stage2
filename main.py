@@ -25,6 +25,9 @@ def is_prime(n):
 
 def is_perfect(n):
 	"""Check if a number is perfect."""
+	if n < 1:
+		return False
+
 	sum = 0
 	for i in range(1,n):
 		if n % i == 0:
