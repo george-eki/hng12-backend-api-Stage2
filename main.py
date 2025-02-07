@@ -1,9 +1,20 @@
 from fastapi import FastAPI, Query, HTTPException
+import httpx
+from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse
 import requests
 
 app = FastAPI()
 
-def is_prime(n: int) -> bool:
+app.add_middleware(
+	CORSMiddleware,
+	allow_origins=["*"],
+	allow_credentials=True,
+	allow_methods=["GET"],
+	allow_headers=["*"]
+)
+
+def is_prime(n):
 	"""Check if a number is prime."""
 	if n < 2:
 	   return False
@@ -12,13 +23,28 @@ def is_prime(n: int) -> bool:
 		   return False
 	return True
 
-def is_armstrong(n: int) -> bool:
-	"""Check if a number is an Armstrong number."""
-	digits = [int(d) for d in str(n)]
-	power = len(digits)
-	return sum(d ** power for d in digits) == n
+def is_perfect(n):
+	"""Check if a number is perfect."""
+	sum = 0
+	for i in range(1,n):
+		if n % i == 0:
+			sum +=i
+	return sum == n
 
-def get_fun_fact(n: int) -> str:
+def is_armstrong(n):
+	"""Check if a number is an Armstrong number."""
+	if n < 0:
+		return False
+
+	digits = [int(d) for d in str(abs(n))]
+	power = len(digits)
+	return sum(d ** power for d in digits) == abs(n)
+
+def digit_sum(n):
+	"""Return the sum of the digits of the number"""
+	return sum(int(digit) for digit in str(abs(n)))
+
+def get_fun_fact(n):
 	"""Fetch a fun fact about the number using Numpers API."""
 	response = requests.get(f"http://numbersapi.com/{n}/math?json")
 	if response.status_code == 200:
@@ -37,9 +63,14 @@ def classify_number(number: str = Query(..., description="The number to classify
 	try:
 		number = int(number)
 	except ValueError:
-		raise HTTPException(status_code=400, detail={"number": number, "error": True})
+		return JSONResponse (
+			status_code = 400,
+			content ={
+			"number": number,
+			"error": True
+			}
+		)
 
-	number = int(number) # Convert invalid string to integer
 
 	# Determine properties
 	properties = []
@@ -50,9 +81,9 @@ def classify_number(number: str = Query(..., description="The number to classify
 	result = {
 		"number": number,
 		"is_prime": is_prime(number),
-		"is_perfect": False,
+		"is_perfect": is_perfect(number),
 		"properties": properties,
-		"digit_sum": sum(int(digit) for digit in str(number)),
+		"digit_sum": digit_sum(number),
 		"fun_fact": get_fun_fact(number),
 	}
 
